@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Состояние в конце становится началом следующего шага</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Пошаговый разбор на общей базе демо */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0}
+.steps button{font:inherit;text-align:left;padding:14px;border:1px solid var(--border);background:var(--card);border-radius:12px;color:var(--muted);cursor:pointer}
+.steps button strong{display:block;font-size:1.2rem;color:var(--indigo-dk)}
+.steps button[aria-pressed="true"]{background:var(--indigo-lt);border:2px solid var(--indigo);padding:13px;color:var(--text)}
+.scene-grid{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:18px}
+.diagram{background:var(--indigo-lt);border-radius:14px;padding:14px;align-self:start}
+svg{width:100%;height:auto;max-height:310px;display:block}
+svg text{font:15px 'Segoe UI',sans-serif;fill:var(--text)}
+.diagram p{font-size:.8rem;color:var(--muted);margin-top:8px}
+.readout{display:grid;gap:10px}
+.readout h2{font-size:.78rem;text-transform:uppercase;color:var(--indigo-dk);letter-spacing:.06em;margin-bottom:4px}
+.readout p{font-size:1rem;line-height:1.55}
+.invariants{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.invariants span{padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-size:.84rem}
+.sub{font-size:1rem}.takeaway{font-size:1rem}
+@media(max-width:640px){.scene-grid{grid-template-columns:1fr}.steps{gap:6px}.steps button{font-size:.78rem;padding:10px 7px}.steps button[aria-pressed="true"]{padding:9px 6px}.steps button strong{font-size:1rem}.diagram svg{max-height:230px}}
+</style></head><body>
+<h1>Состояние в конце становится началом следующего шага</h1>
+<p class="sub">Переключайте интервалы. Сравнивайте действие, камеру и то, что должно остаться неизменным.</p>
+<div class="steps" role="group" aria-label="Интервалы сцены">
+<button type="button" data-step="0" aria-pressed="true"><strong>0–4 с</strong>Подход</button>
+<button type="button" data-step="1" aria-pressed="false"><strong>4–8 с</strong>Замедление</button>
+<button type="button" data-step="2" aria-pressed="false"><strong>8–12 с</strong>Остановка</button>
+</div>
+<div class="scene-grid">
+<div class="diagram"><svg viewBox="0 0 300 280" role="img" aria-label="Условная схема сверху: героиня идёт к двери, камера находится перед ней, окна на правой стене">
+<rect x="28" y="18" width="244" height="248" rx="12" fill="white" stroke="var(--border)" stroke-width="2"/>
+<path d="M115 20h70" stroke="var(--indigo-dk)" stroke-width="8"/>
+<text x="150" y="49" text-anchor="middle">Переговорная</text>
+<path d="M269 67v42m0 12v42m0 12v42" stroke="var(--cyan)" stroke-width="7"/>
+<text x="244" y="251" text-anchor="end">Окна справа</text>
+<path d="M80 207V89m-7 9 7-10 7 10" fill="none" stroke="var(--indigo)" stroke-width="3" stroke-dasharray="5 5"/>
+<g id="hero-marker" transform="translate(145 202)"><circle r="18" fill="var(--indigo)"/><text x="27" y="5">Героиня</text></g>
+<g id="camera-marker" transform="translate(143 146)"><rect x="-14" y="-11" width="28" height="22" rx="5" fill="var(--cyan)"/><path d="M-6 11h12l-6 9z" fill="var(--cyan)"/><text x="25" y="5">Камера</text></g>
+</svg><p>Условная схема сверху. Камера смотрит на героиню. Реальную траекторию и физику проверяют в генерации.</p></div>
+<div class="readout" aria-live="polite" aria-atomic="true" id="readout">
+<div class="panel"><h2>Действие</h2><p id="action">Героиня идёт из глубины коридора к переговорной.</p></div>
+<div class="panel"><h2>Камера</h2><p id="camera">Средний общий план. Камера перед героиней плавно движется назад.</p></div>
+<div class="panel"><h2>Состояние в конце</h2><p id="end">Героиня приближается к двери переговорной. Папка остаётся в левой руке.</p></div>
+</div></div>
+<div class="invariants" aria-label="Неизменные условия"><span>Та же героиня</span><span>Синий костюм</span><span>Папка в левой руке</span><span>Окна справа</span></div>
+<p class="takeaway"><b>Главное:</b> следующий интервал начинается из состояния, которым закончился предыдущий. Схема помогает проверить непрерывность; качество готового видео оценивает человек.</p>
+<script>
+const steps=[
+{action:'Героиня идёт из глубины коридора к переговорной.',camera:'Средний общий план. Камера перед героиней плавно движется назад.',end:'Героиня приближается к двери переговорной. Папка остаётся в левой руке.',hero:202,cam:146},
+{action:'Героиня подходит к двери и замедляет шаг. Окна остаются справа, папка — в левой руке.',camera:'Камера сохраняет дистанцию и остаётся на уровне глаз.',end:'Героиня у двери и замедляется. Реквизит и геометрия коридора сохранены.',hero:157,cam:101},
+{action:'Героиня останавливается, поворачивается к двери и кладёт правую руку на ручку. Дверь ещё закрыта.',camera:'Камера мягко прекращает движение.',end:'Чёткий финальный кадр у переговорной: правая рука на ручке, папка в левой.',hero:116,cam:68}];
+const controls=[...document.querySelectorAll('[data-step]')];
+controls.forEach(button=>button.addEventListener('click',()=>{const s=steps[Number(button.dataset.step)];controls.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));['action','camera','end'].forEach(id=>document.getElementById(id).textContent=s[id]);document.getElementById('hero-marker').setAttribute('transform',`translate(145 ${s.hero})`);document.getElementById('camera-marker').setAttribute('transform',`translate(143 ${s.cam})`)}));
+</script></body></html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="data:,"><title>Seedance 2.5 — как делать AI-видео, которое работает</title><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f7;
+  --card:#ffffff;
+  --border:#e2e8f0;
+  --indigo:#6366f1;
+  --indigo-dk:#4338ca;
+  --indigo-lt:#eef2ff;
+  --cyan:#0ea5e9;
+  --cyan-lt:#e0f2fe;
+  --amber:#f59e0b;
+  --amber-lt:#fffbeb;
+  --green:#16a34a;
+  --green-lt:#f0fdf4;
+  --red:#dc2626;
+  --red-lt:#fef2f2;
+  --text:#0f172a;
+  --muted:#64748b;
+  --nav-h:56px;
+}
+html{scroll-behavior:smooth;background:var(--bg)}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 12% 0%,rgba(99,102,241,.14),transparent 32%),
+    radial-gradient(circle at 85% 6%,rgba(14,165,233,.13),transparent 34%),
+    linear-gradient(180deg,#f8fafc 0%,#eef2ff 30%,#f8fafc 100%);
+  color:var(--text);
+  line-height:1.65;
+  overflow-x:hidden;
+}
+
+/* NAV */
+nav.top{
+  position:fixed;top:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(255,255,255,.97);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);box-shadow:0 1px 10px rgba(0,0,0,.06);
+  display:flex;align-items:center;padding:0 20px;z-index:900;
+  gap:2px;overflow-x:auto;scrollbar-width:none;
+}
+nav.top::-webkit-scrollbar{display:none}
+.nav-logo{font-weight:900;font-size:.93rem;color:var(--indigo-dk);white-space:nowrap;margin:0 10px 0 4px;flex-shrink:0}
+.nav-sep{width:1px;height:18px;background:var(--border);margin:0 6px;flex-shrink:0}
+.nav-link{padding:5px 10px;border-radius:6px;font-size:.75rem;font-weight:700;color:var(--muted);text-decoration:none;white-space:nowrap;transition:color .2s,background .2s;flex-shrink:0}
+.nav-link:hover,.nav-link.active{color:var(--indigo);background:var(--indigo-lt)}
+.nav-link:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+
+/* HERO */
+#hero{
+  min-height:100vh;padding:calc(var(--nav-h) + 56px) 24px 64px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+}
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:22px}
+.hero-badge{padding:5px 14px;background:var(--indigo-lt);border:1px solid #c7d2fe;border-radius:100px;font-size:.78rem;font-weight:700;color:var(--indigo-dk)}
+.hero-title{font-size:clamp(2rem,5.5vw,3.6rem);font-weight:900;line-height:1.12;letter-spacing:-1.5px;margin-bottom:16px;max-width:900px}
+.hero-title em{color:var(--indigo);font-style:normal}
+.hero-sub{font-size:1.05rem;color:var(--muted);max-width:660px;margin-bottom:36px}
+.hero-img{max-width:900px;width:100%;margin-bottom:40px}
+.hero-nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:820px}
+.hero-nav a{padding:8px 16px;border-radius:10px;background:var(--card);border:1px solid var(--border);font-size:.82rem;font-weight:600;color:var(--text);text-decoration:none;box-shadow:0 2px 8px rgba(15,23,42,.05);transition:transform .15s,box-shadow .15s}
+.hero-nav a:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(99,102,241,.15)}
+
+/* SECTIONS */
+.sec{max-width:1180px;margin:0 auto;padding:72px 24px}
+.sec-head{margin-bottom:36px}
+.num-badge{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:13px;font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:14px}
+.n1{background:linear-gradient(135deg,#6366f1,#818cf8)}
+.n2{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
+.n3{background:linear-gradient(135deg,#8b5cf6,#a78bfa)}
+.n4{background:linear-gradient(135deg,#16a34a,#4ade80)}
+.n5{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
+.n6{background:linear-gradient(135deg,#ec4899,#f472b6)}
+.n7{background:linear-gradient(135deg,#dc2626,#f87171)}
+.n8{background:linear-gradient(135deg,#0891b2,#22d3ee)}
+.n9{background:linear-gradient(135deg,#4338ca,#6366f1)}
+.sec-title{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-.5px;margin-bottom:10px}
+.sec-desc{font-size:1rem;color:var(--muted);max-width:760px;line-height:1.75}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
+
+/* CARD GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.grid .c-name{font-weight:800;margin-bottom:8px;font-size:.96rem}
+.grid p:not(.c-name){color:var(--muted);font-size:.88rem;line-height:1.6}
+
+/* CALLOUTS */
+.note-callout{background:var(--indigo-lt);border:1px solid #c7d2fe;border-radius:14px;padding:16px 20px;margin-bottom:24px}
+.note-callout p{color:var(--indigo-dk);font-size:.92rem;line-height:1.7}
+.warn-callout{background:var(--amber-lt);border:1px solid #fcd34d;border-radius:16px;padding:20px 24px;margin-top:20px}
+.warn-callout p{color:#78350f;line-height:1.7;font-size:.93rem}
+
+/* IMAGE CARD + PLACEHOLDER */
+.img-card{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(15,23,42,.12);cursor:zoom-in}
+.img-card img{display:block;width:100%;height:auto}
+.img-card .img-missing-caption{display:none}
+.img-card.img-missing{border:2px dashed var(--border);background:var(--indigo-lt);min-height:220px;display:flex;align-items:center;justify-content:center;box-shadow:none;cursor:default}
+.img-card.img-missing img{display:none}
+.img-card.img-missing .img-missing-caption{display:block;color:var(--muted);font-size:.85rem;text-align:center;padding:24px;max-width:340px}
+
+/* VIZ CARD (iframe) */
+.viz{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.07)}
+.viz-bar{display:flex;align-items:center;gap:10px;padding:9px 14px;background:#f8fafc;border-bottom:1px solid var(--border)}
+.dots{display:flex;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%}
+.dr{background:#ff5f57}.dy{background:#febb2c}.dg{background:#27c840}
+.viz-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);flex:1}
+.viz-fs{display:flex;align-items:center;gap:5px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;font-size:.71rem;font-weight:600;color:var(--muted);cursor:pointer;transition:background .2s,color .2s,border-color .2s;white-space:nowrap}
+.viz-fs:hover{background:var(--indigo-lt);color:var(--indigo);border-color:#c7d2fe}
+.viz iframe{width:100%;border:none;display:block}
+
+/* PROMPT BOX */
+.prompt-box{background:#0f172a;border-radius:14px;overflow:hidden;margin-bottom:18px}
+.prompt-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#1e293b;color:#e2e8f0;font-size:.82rem;font-weight:700}
+.copy-btn{padding:5px 12px;border-radius:8px;border:1px solid #475569;background:transparent;color:#e2e8f0;font-size:.76rem;font-weight:700;cursor:pointer;transition:background .2s}
+.copy-btn:hover{background:#334155}
+.prompt-box pre{margin:0;padding:18px 16px;color:#e2e8f0;font-size:.82rem;line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+
+/* LIGHTBOX */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.92);z-index:2000;display:flex;align-items:center;justify-content:center;padding:32px;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:auto}
+.overlay img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.overlay-close{position:absolute;top:18px;right:22px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.overlay-close:hover{background:rgba(255,255,255,.22)}
+.overlay-download{position:absolute;top:18px;right:72px;height:40px;padding:0 16px;border-radius:20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;z-index:2}
+.overlay-download:hover{background:rgba(255,255,255,.22)}
+
+/* FULLSCREEN IFRAME OVERLAY */
+#fs-overlay{position:fixed;inset:0;background:rgba(2,6,23,.94);z-index:2100;display:none;flex-direction:column}
+#fs-overlay.open{display:flex}
+#fs-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(0,0,0,.4);border-bottom:1px solid rgba(255,255,255,.08)}
+#fs-title{font-size:.8rem;font-weight:700;color:rgba(255,255,255,.65);flex:1}
+#fs-close{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#fs-close:hover{background:rgba(255,255,255,.2)}
+#fs-frame{flex:1;border:none;background:#fff}
+
+/* CHECKLIST */
+.checklist-progress-bar{height:10px;border-radius:100px;background:var(--indigo-lt);overflow:hidden;margin-bottom:20px}
+.checklist-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--indigo),var(--cyan));border-radius:100px;transition:width .3s ease}
+.checklist-items{list-style:none;display:flex;flex-direction:column;gap:12px}
+.checklist-items label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.95rem}
+.checklist-items input{width:18px;height:18px;accent-color:var(--indigo);cursor:pointer;flex-shrink:0}
+.checklist-done{margin-top:18px;padding:12px 16px;background:var(--green-lt);color:var(--green);border-radius:10px;font-weight:700}
+
+/* QUIZ */
+.quiz{display:flex;flex-direction:column;gap:18px}
+.quiz-question{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px}
+.quiz-text{font-weight:700;margin-bottom:12px}
+.quiz-options{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.quiz-options label{display:flex;align-items:center;gap:8px;font-size:.92rem;cursor:pointer}
+.quiz-options label.quiz-correct-answer{color:var(--green);font-weight:700}
+.quiz-options input{accent-color:var(--indigo)}
+.quiz-check{padding:8px 16px;border-radius:9px;border:none;background:var(--indigo);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer}
+.quiz-check:hover{background:var(--indigo-dk)}
+.quiz-feedback{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:.9rem}
+.quiz-feedback.correct{background:var(--green-lt);color:var(--green)}
+.quiz-feedback.incorrect{background:var(--red-lt);color:var(--red)}
+.quiz-score-box{text-align:center;font-weight:800;color:var(--indigo-dk)}
+
+/* CONCLUSION */
+.conclusion-list{list-style:none;counter-reset:concl;display:flex;flex-direction:column;gap:14px;margin-bottom:28px}
+.conclusion-list li{counter-increment:concl;padding-left:38px;position:relative;font-size:1rem}
+.conclusion-list li::before{content:counter(concl);position:absolute;left:0;top:-2px;width:26px;height:26px;border-radius:50%;background:var(--indigo);color:#fff;font-size:.8rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+.svc-link{color:var(--indigo);font-weight:700;text-decoration:underline;text-underline-offset:2px}
+
+/* SCROLL REVEAL */
+.fade{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+.fade.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}}
+@media (max-width:900px){.sec{padding:56px 18px}}
+
+footer{text-align:center;padding:32px 20px 48px;color:var(--muted);font-size:.85rem}
+
+/* Дополнения к базовым компонентам шаблона */
+html{scroll-padding-top:78px}
+.sec > * + *{margin-top:22px}
+.sec-head{margin-bottom:28px}
+.prose{max-width:100%;font-size:1.02rem;line-height:1.78}
+.prose > * + *{margin-top:14px}
+h3{font-size:clamp(1.08rem,2vw,1.3rem);line-height:1.4}
+.prose p,.sec>p{max-width:95ch}
+.text-list{padding-left:24px}
+.text-list li+li{margin-top:9px}
+.grid{align-items:start}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.five{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid .card{height:100%;min-width:0}
+.grid .card p,.grid p:not(.c-name){font-size:1rem;color:var(--text)}
+.grid .prose h3{margin-bottom:12px}
+.hero-img{max-width:1132px;margin-bottom:14px}
+.hero-sub{max-width:760px;font-size:1.13rem}
+#hero{padding-top:100px;min-height:auto}
+.eyebrow{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--indigo-dk);font-size:.8rem;margin-bottom:14px}
+.eyebrow a{color:inherit;text-underline-offset:4px}
+.image-hint{color:var(--muted);font-size:.85rem;margin-bottom:28px}
+.fine-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;background:var(--card)}
+.fine-table{width:100%;border-collapse:collapse;font-size:1rem;min-width:660px}
+.fine-table caption{text-align:left;font-weight:700;padding:16px;background:#f8fafc}
+.fine-table th{text-align:left;padding:14px 16px;background:var(--indigo-lt);color:var(--indigo-dk)}
+.fine-table td{padding:16px;border-top:1px solid var(--border);vertical-align:top}
+.fine-table th:first-child{width:15%}
+.fine-table td:first-child{font-weight:700;color:var(--indigo-dk)}
+.question-card{border:1px solid #c7d2fe;background:linear-gradient(120deg,var(--indigo-lt),#fff);padding:24px;border-radius:16px}
+.question-card h3{margin-bottom:18px}
+.acc{border:1px solid var(--border);background:var(--card);border-radius:12px}
+.acc summary{padding:16px 20px;font-weight:700;cursor:pointer}
+.acc-body{padding:0 20px 20px}
+.bridge{padding:14px 18px;border-left:3px solid var(--cyan);color:var(--muted);background:rgba(255,255,255,.7);border-radius:0 10px 10px 0}
+.sec a{color:var(--indigo-dk);text-underline-offset:3px}
+.note-callout,.warn-callout{margin-bottom:0}
+.danger-callout,.ok-callout{border:1px solid;border-radius:16px;padding:20px 24px}
+.danger-callout{background:var(--red-lt);border-color:#fecaca;color:#991b1b}
+.ok-callout{background:var(--green-lt);border-color:#bbf7d0;color:#166534}
+.grid>.warn-callout{margin-top:0}
+.grid .prose p{color:inherit}
+.prompt-box pre{font-size:1rem}
+.secondary{margin-top:20px;border:1px solid var(--border);border-radius:9px;padding:10px 16px;background:var(--card);font:inherit;color:var(--indigo-dk);font-weight:700;cursor:pointer}
+.quiz-score-box{margin-top:24px}
+.quiz-options label{padding:9px;border-radius:8px;align-items:flex-start;font-size:1rem}
+.quiz-options input{margin-top:6px;flex-shrink:0}
+.quiz-correct-answer{background:var(--green-lt)}
+button:disabled{cursor:default;opacity:.7}
+.checklist-items label{align-items:flex-start;padding:5px 0;font-size:1.02rem}
+.checklist-items input{margin-top:5px}
+#checklist-count{font-weight:700;margin-bottom:10px}
+.overlay{visibility:hidden;padding:80px 28px 28px}
+.overlay.open{visibility:visible}
+.overlay-download{color:white!important}
+.overlay img.zoomed{max-width:none;max-height:none;width:auto;cursor:zoom-out}
+.overlay.zoom-mode{overflow:auto;display:block;text-align:center}
+.overlay img{cursor:zoom-in}
+#lightbox-zoom{position:absolute;top:18px;left:22px;z-index:3;background:#fff;border:0;border-radius:20px;padding:10px 16px;font:inherit;cursor:pointer;color:var(--text)}
+.skip{position:fixed;top:-80px;left:15px;z-index:3000;background:white;padding:12px;border:2px solid var(--indigo)}
+.skip:focus{top:8px}
+[tabindex]:focus-visible,summary:focus-visible{outline:3px solid var(--indigo);outline-offset:4px}
+.fade{opacity:1;transform:none}
+.toc{padding-top:64px}.toc .hero-title{margin-top:20px}
+.toc-link{text-decoration:none;color:var(--text)!important;display:block;transition:transform .15s}
+.toc-link:hover{transform:translateY(-2px)}
+.toc-link h2{font-size:1.15rem;margin-bottom:8px}
+.toc-link p{color:var(--muted)!important}
+.start-link{display:inline-block;background:var(--indigo);color:#fff!important;text-decoration:none;padding:14px 24px;border-radius:12px;margin-bottom:12px;font-weight:800}
+@media(max-width:700px){.grid.two,.grid.five{grid-template-columns:1fr}.sec{padding:42px 16px}.question-card{padding:18px}#hero{padding:88px 16px 40px}.hero-title{letter-spacing:-.7px}.card{padding:20px}.viz-bar{flex-wrap:wrap}.viz-lbl{min-width:100px}.overlay{padding:80px 10px 20px}.nav-logo{display:none}.prompt-head{gap:12px}.hero-nav a{font-size:.85rem}.toc{padding-top:30px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+@media print{nav.top,.viz,.quiz,.overlay,#fs-overlay,.secondary,.copy-btn,.skip{display:none!important}body{background:#fff}.sec{padding:24px 0;break-inside:auto}.card,.img-card{box-shadow:none}.fade{opacity:1}.img-card{break-inside:avoid}#hero{padding:10px 0}.hero-img{max-width:600px}}
+</style></head><body><a class="skip" href="#s1">К содержанию</a><nav class="top" aria-label="Навигация по странице"><a class="nav-link" href="../index.html">← Оглавление</a><span class="nav-sep"></span><a class="nav-logo" href="#hero">AI-видео</a><a class="nav-link" href="#s1">Качество</a><a class="nav-link" href="#s2">Бриф</a><a class="nav-link" href="#s3">Референсы</a><a class="nav-link" href="#s4">Сценарий</a><a class="nav-link" href="#s5">Генерации</a><a class="nav-link" href="#s6">Консистентность</a><a class="nav-link" href="#s7">Приёмка</a><a class="nav-link" href="#checklist">Чек-лист</a><a class="nav-link" href="#quiz">Квиз</a></nav><header id="hero"><div class="hero-badges"><span class="hero-badge">Лекция</span><span class="hero-badge">Работа с заказчиком</span><span class="hero-badge">От идеи до приёмки</span></div><p class="eyebrow"><a href="https://seed.bytedance.com/en/seedance2_5" target="_blank" rel="noopener">Seedance 2.5</a></p><h1 class="hero-title">Как делать AI-видео,<br>которое <em>работает</em></h1><p class="hero-sub">От пожелания заказчика до принятого ролика: бриф, референсы, сценарий и осмысленные итерации.</p><figure class="img-card hero-img" data-lightbox tabindex="0" role="button" aria-label="Увеличить: Путь от задачи и подготовки к генерации и приёмке">
+    <img src="../png/seedance_2_5/01_hero_process.png" alt="Путь от задачи и подготовки к генерации и приёмке" width="1672" height="941" loading="eager" onerror="this.closest('.img-card').classList.add('img-missing')">
+    <figcaption class="img-missing-caption">Путь от задачи и подготовки к генерации и приёмке</figcaption></figure><p class="image-hint">Нажмите на любую иллюстрацию, чтобы рассмотреть её крупнее</p><nav class="hero-nav" aria-label="Разделы страницы"><a href="#s1">01 · Качество</a><a href="#s2">02 · Бриф</a><a href="#s3">03 · Референсы</a><a href="#s4">04 · Сценарий</a><a href="#s5">05 · Генерации</a><a href="#s6">06 · Консистентность</a><a href="#s7">07 · Приёмка</a><a href="#quiz">Проверить себя</a></nav></header><main><section class="sec" id="s1"><div class="sec-head fade"><span class="num-badge n1">01</span><h2 class="sec-title">Что значит «работающее видео»</h2><p class="sec-desc">Красивый фрагмент становится рабочим роликом, когда выполняет задачу, сохраняет важные детали и укладывается в ресурсы.</p></div><div class="card prose"><h3>От случайной удачи к управляемому процессу</h3><p data-source="3">Сегодня мы будем говорить о <a href="https://seed.bytedance.com/en/seedance2_5" target="_blank" rel="noopener">Seedance 2.5</a> и о том, как выстроить работу так, чтобы результат зависел не только от удачной случайности. Интерфейс займёт небольшую часть занятия. Основное внимание мы уделим решениям, которые принимаются до генерации и между итерациями.</p><p data-source="4">Генеративная модель может выдать красивый фрагмент даже по короткому запросу. Для личного эксперимента этого иногда достаточно. В работе с заказчиком критерии становятся строже. Ролик должен выполнять конкретную задачу, сохранять важные детали и укладываться в доступное количество попыток.</p><p data-source="5">Предсказуемый результат означает, что на каждом этапе мы понимаем, что проверяем и что будем менять, если результат нас не устроит.</p></div><div class="grid five"><div class="card prose"><h3>Задача</h3><p data-source="8">Понятно, зачем существует ролик: привлечь внимание, развлечь, объяснить продукт, показать атмосферу, привести зрителя к покупке, регистрации или другому действию.</p></div><div class="card prose"><h3>Смысл</h3><p data-source="9">Зритель считывает основное событие без дополнительного объяснения автора. Если человек должен трижды пересмотреть сцену, чтобы понять, кто что сделал, визуальная эффектность не спасает материал.</p></div><div class="card prose"><h3>Консистентность</h3><p data-source="10">Герой, одежда, реквизит, продукт и локация сохраняют узнаваемость настолько, насколько это важно для задачи.</p></div><div class="card prose"><h3>Формат</h3><p data-source="11">Длительность, соотношение сторон, темп, звук и композиция подходят площадке, на которой будет опубликован ролик.</p></div><div class="card prose"><h3>Ресурсы</h3><p data-source="12">Результат получен в пределах согласованного времени, бюджета и количества итераций.</p></div></div><div class="card prose"><h3>Описывайте дефект так, чтобы его можно было исправить</h3><p data-source="13">Важно различать художественную оценку и производственную. Фраза «мне не очень нравится» не подсказывает, что исправлять. Формулировка «на шестой секунде меняется лицо героини, поэтому зритель перестаёт узнавать персонажа» уже описывает конкретную проблему.</p></div><div class="question-card"><p class="eyebrow">Остановитесь и подумайте</p><h3>Какой дефект самый дорогой: внешность, действие, локация или камера?</h3><details class="acc"><summary>Открыть разбор</summary><div class="acc-body prose"><p data-source="16">У разных проектов будет разный приоритет. В рекламе косметики оттенок упаковки может быть важнее сложного движения камеры. В ролике эксперта лицо и естественная мимика важнее декоративных деталей фона. В обучающем видео зритель простит менее кинематографичный свет, но не простит непонятную последовательность действий.</p></div></details></div><p class="bridge">Начните с того, что можно согласовать до первой генерации: задачи и критериев приёмки.</p></section><section class="sec" id="s2"><div class="sec-head fade"><span class="num-badge n2">02</span><h2 class="sec-title">От пожелания к рабочему брифу</h2><p class="sec-desc">Бриф — договорённость о результате. Переведите слова «дорого», «современно» и «динамично» в видимое событие.</p></div><figure class="img-card fade" data-lightbox tabindex="0" role="button" aria-label="Увеличить: От пожелания заказчика к уточнению и рабочей сцене">
+    <img src="../png/seedance_2_5/02_brief.png" alt="От пожелания заказчика к уточнению и рабочей сцене" width="1672" height="941" loading="lazy" onerror="this.closest('.img-card').classList.add('img-missing')">
+    <figcaption class="img-missing-caption">От пожелания заказчика к уточнению и рабочей сцене</figcaption></figure><div class="card prose"><h3>«Современный, дорогой и динамичный ролик»</h3><p data-source="21">Перед нами типичное сообщение. Заказчик уже назвал несколько характеристик, но ни одну из них пока нельзя использовать как точную производственную инструкцию. «Современно» может означать технологичную локацию, быстрый монтаж, холодную палитру или просто отсутствие визуального мусора. «Дорого» один человек понимает как лаконичный премиальный кадр, другой — как большое количество эффектов. «Динамично» может относиться к герою, камере, монтажу или музыке.</p><p data-source="22">Наша задача на этом этапе — не просить заказчика написать промпт. Мы должны помочь ему принять несколько понятных решений.</p></div><div class="grid"><div class="card prose"><h3>1. Деловая задача</h3><ul class="text-list"><li data-source="25">Где зритель увидит ролик?</li><li data-source="26">Кто этот зритель?</li><li data-source="27">Что он должен понять, почувствовать или сделать после просмотра?</li><li data-source="28">Какой продукт, человек или идея должны остаться в памяти?</li></ul></div><div class="card prose"><h3>2. Видимое содержание</h3><ul class="text-list"><li data-source="30">Кто является главным героем?</li><li data-source="31">Где происходит действие?</li><li data-source="32">Что герой делает в кадре?</li><li data-source="33">Как меняется ситуация от начала к финалу?</li><li data-source="34">Что должно остаться неизменным?</li></ul></div><div class="card prose"><h3>3. Производственные ограничения</h3><ul class="text-list"><li data-source="36">Длительность и соотношение сторон.</li><li data-source="37">Срок готовности.</li><li data-source="38">Допустимое количество вариантов и кругов правок.</li><li data-source="39">Бюджет на генерации и постобработку.</li><li data-source="40">Запрещённые образы, цвета, движения, слова, бренды или сюжетные решения.</li></ul></div></div><div class="card prose"><h3>Восемь вопросов рабочего брифа</h3><ol class="text-list"><li data-source="43">Какую задачу решает ролик?</li><li data-source="44">Для кого он создаётся и где будет опубликован?</li><li data-source="45">Какое одно событие зритель должен увидеть?</li><li data-source="46">Что нужно воспроизвести максимально точно?</li><li data-source="47">Что модель может интерпретировать свободно?</li><li data-source="48">Что именно нравится в каждом присланном референсе?</li><li data-source="49">Чего в результате точно не должно быть?</li><li data-source="50">По каким признакам мы поймём, что ролик принят?</li></ol></div><div class="card prose"><h3>Если заказчик пока не знает, чего хочет</h3><p data-source="52">Если человек не может описать желаемый результат, не нужно повторять тот же открытый вопрос другими словами. Дайте выбор между двумя или тремя понятными вариантами.</p><p data-source="53">Например, вместо «Какую вы хотите камеру?» можно спросить: «Мы наблюдаем за героиней спокойно, словно камера сопровождает её, или создаём энергичное движение с быстрым приближением?» Вместо «Какая нужна атмосфера?» — «Больше доверия и спокойствия или больше энергии и амбиции?» Вместо «Какой вам нравится монтаж?» — «Один цельный кадр или несколько коротких планов?»</p><p data-source="54">Полезно просить заказчика объяснить не весь референс, а одну понравившуюся характеристику. Человек может прислать автомобильную рекламу, хотя мы делаем ролик для онлайн-курса. Ему может нравиться не автомобиль и не сюжет, а свет, медленный проезд камеры или ощущение статуса.</p></div><div class="note-callout prose"><p><strong>Комментарий к референсу = объект + характеристика + приоритет.</strong></p><p data-source="57">Хороший комментарий звучит так: «Из этого видео берём плавное движение камеры на уровне глаз. Машину, цветовую палитру и ночную локацию не копируем. Движение камеры — обязательный элемент». После такой формулировки материал становится рабочим.</p></div><div class="question-card"><p class="eyebrow">Остановитесь и подумайте</p><h3>Заказчик просит «сделать динамичнее». Что вы уточните первым?</h3><details class="acc"><summary>Открыть разбор</summary><div class="acc-body prose"><p>Какую именно динамику нужно изменить: действие героя, движение камеры, частоту склеек или музыкальный ритм? Это четыре разных решения.</p></div></details></div><div class="card prose"><h3>Пример разговора: ролик для эксперта</h3><p data-source="61">Представим, что заказчику нужен ролик с деловой героиней в современном офисе.</p><p data-source="62">Заказчик говорит: «Хочу, чтобы она уверенно шла по офису, всё выглядело дорого и современно».</p><p data-source="63">Я уточняю: «Ролик должен продавать конкретную услугу или формировать образ эксперта?»</p><p data-source="64">Заказчик отвечает: «Формировать образ эксперта».</p><p data-source="65">Следующий вопрос: «Что должен считать зритель — спокойную компетентность или лидерскую энергию?»</p><p data-source="66">После выбора я уточняю видимое действие: «Она просто проходит по коридору или в финале приходит к конкретной точке — например, к переговорной, команде или экрану с проектом?»</p><p data-source="67">Затем фиксирую неизменное: внешность, костюм, папка в руке, окна справа, холодный дневной свет. И только после этого обсуждаю траекторию камеры.</p><p data-source="68">В результате фраза «дорого и современно» превращается в конкретную сцену: героиня уверенно идёт по светлому офисному коридору к переговорной; камера плавно движется перед ней; лицо, костюм, папка и расположение окон сохраняются; визуальный акцент создают чистая композиция и холодный дневной свет.</p></div><p class="bridge">Бриф фиксирует задачу. Карта референсов распределяет, какой материал отвечает за каждую деталь.</p></section><section class="sec" id="s3"><div class="sec-head fade"><span class="num-badge n3">03</span><h2 class="sec-title">Назначьте референсам роли</h2><p class="sec-desc">Референс — образец с конкретным поручением. Назначьте ему роль, прежде чем загружать материалы.</p></div><figure class="img-card fade" data-lightbox tabindex="0" role="button" aria-label="Увеличить: Пять ролей референсов: лицо, образ, локация, движение и звук">
+    <img src="../png/seedance_2_5/03_references.png" alt="Пять ролей референсов: лицо, образ, локация, движение и звук" width="1672" height="941" loading="lazy" onerror="this.closest('.img-card').classList.add('img-missing')">
+    <figcaption class="img-missing-caption">Пять ролей референсов: лицо, образ, локация, движение и звук</figcaption></figure><div class="card prose"><h3>Один материал — одна основная функция</h3><p data-source="72">Референс — это не просто пример того, что нам нравится. В производственном процессе он должен контролировать определённую часть результата. Если мы не назначили ему роль, модель вынуждена сама решать, какие свойства изображения нужно сохранить.</p><p data-source="73">Один референс должен иметь одну основную функцию.</p><p data-source="74">Это не означает, что модель увидит в изображении только одну характеристику. Мы задаём приоритет, чтобы снизить неоднозначность. Референс лица не должен автоматически определять одежду, позу, фон и композицию. Изображение локации не должно менять внешность героя.</p></div><div class="fine-table-wrap"><table class="fine-table"><caption>Карта референсов из лекции</caption><thead><tr><th scope="col">Материал</th><th scope="col">Основная роль</th><th scope="col">Что сохранить</th><th scope="col">Что не копировать</th></tr></thead><tbody><tr><td>Изображение 1</td><td>Внешность</td><td>Черты лица, возраст, причёску</td><td>Одежду, позу и фон</td></tr><tr><td>Изображение 2</td><td>Образ</td><td>Костюм, обувь, аксессуары</td><td>Локацию и крупность</td></tr><tr><td>Изображение 3</td><td>Локация</td><td>Геометрию, материалы, окна справа</td><td>Людей и случайный реквизит</td></tr><tr><td>Видео 1</td><td>Движение</td><td>Темп и траекторию камеры</td><td>Персонажа и цвет</td></tr><tr><td>Аудио 1</td><td>Звук</td><td>Ритм и характер среды</td><td>Визуальное содержание</td></tr></tbody></table></div><div class="card prose"><h3>Паспорт каждого референса</h3><ol class="text-list"><li data-source="80">Что он контролирует.</li><li data-source="81">Что необходимо сохранить.</li><li data-source="82">Что не нужно копировать.</li><li data-source="83">Каков его приоритет при конфликте с другими материалами.</li></ol><p data-source="84">Если два референса противоречат друг другу, заранее устанавливаем иерархию. В коммерческом ролике приоритет обычно получают внешность героя, продукт и обязательные элементы бренда. Затем идут одежда, реквизит и геометрия локации. Камера, декоративный свет и мелкие детали могут быть более гибкими — если заказчик не закрепил их отдельно.</p></div><div class="card prose"><h3>Когда три изображения спорят друг с другом</h3><p data-source="86">Предположим, у нас есть портрет героини, полнофигурное изображение в синем костюме и фотография офисного коридора. На портрете женщина находится в тёплом интерьере, на изображении костюма — на сером студийном фоне, а в коридоре окна расположены справа.</p><p data-source="87">Если просто загрузить все изображения и написать «сохранить всё», модель получает конфликт. Какой фон считать правильным? Нужно ли переносить тёплый свет с портрета? Является ли поза на полнофигурном изображении обязательной?</p><p data-source="88">Рабочая инструкция будет конкретнее: первое изображение определяет только лицо и причёску; второе — костюм и пропорции образа; третье — архитектуру, холодную цветовую температуру и окна с правой стороны. Поза, фон портрета и студийный свет второго изображения игнорируются.</p></div><div class="question-card"><p class="eyebrow">Остановитесь и подумайте</p><h3>Какой референс важнее всего для ролика конкретного эксперта?</h3><details class="acc"><summary>Открыть разбор</summary><div class="acc-body prose"><p>Внешность эксперта: зритель должен узнавать человека. Для рекламы конкретного товара высший приоритет может перейти к продукту. Иерархию согласуют под задачу.</p></div></details></div><div class="card prose"><h3>Когда материалов становится слишком много</h3><p data-source="92">Большое количество материалов само по себе не делает управление точнее. Добавляйте новый материал только тогда, когда он закрывает отдельную функцию или даёт недостающий ракурс.</p><p data-source="93">Для главного персонажа полезно заранее собрать небольшой согласованный набор: лицо крупно, вид в полный рост, два нужных ракурса, утверждённая одежда и важный реквизит. Свет, цвет кожи и возраст должны выглядеть совместимо. Если эти изображения созданы в разных стилях, сначала лучше привести их к единому визуальному состоянию.</p></div><div class="warn-callout prose"><h3>Права и согласие</h3><p data-source="95">При работе с референсами проверяем право на использование внешности, изображения, музыки, товарных знаков и клиентских материалов. Для коммерческого ролика особенно важно понимать, можно ли публиковать исходники и итоговый результат в портфолио. Этот вопрос лучше согласовать до генерации, а не после публикации.</p></div><p class="bridge">Референсы задают исходные условия. Сценарий связывает их во времени.</p></section><section class="sec" id="s4"><div class="sec-head fade"><span class="num-badge n4">04</span><h2 class="sec-title">Соберите событие во времени</h2><p class="sec-desc">Промпт — инструкция постановочной группе. Сначала событие и финальная точка, затем камера, физика и звук.</p></div><div class="card prose"><h3>Сначала — одно видимое событие</h3><p data-source="99">Хороший видеопромпт начинается не с перечисления красивых характеристик, а с одного видимого события. Кто находится в кадре, где он находится, что делает и к какому состоянию приходит?</p><p data-source="100">Формулировка «уверенная деловая женщина, премиальный офис, кинематографично, динамично» описывает образ, но не описывает событие. Модель ещё не знает, должна ли женщина идти, говорить, открывать дверь, смотреть в камеру или взаимодействовать с другим человеком.</p><p data-source="101">Более исполнимая основа звучит так: «Деловая женщина идёт по офисному коридору к переговорной, останавливается у стеклянной двери и поворачивается к вошедшей за ней команде». Теперь есть начальное состояние, действие и финальная точка.</p></div><div class="card prose"><h3>Непрерывный кадр или монтажная последовательность</h3><p data-source="103">До написания таймкодов выбираем форму ролика. В непрерывном кадре камера и персонажи физически продолжают предыдущее положение. В монтажной последовательности каждый новый план может начинаться с другой крупности и позиции, но склейки должны быть обозначены.</p><p data-source="104">Если длительность короткая, а действий много, не нужно пытаться спрятать монтаж внутри длинного предложения. Лучше честно разделить ролик на планы. Если важны цельность пространства, естественная походка или сложное движение камеры, удобнее строить один непрерывный кадр с последовательными микродействиями.</p></div><figure class="img-card fade" data-lightbox tabindex="0" role="button" aria-label="Увеличить: Три интервала сцены: подход, замедление и остановка у переговорной">
+    <img src="../png/seedance_2_5/04_timeline.png" alt="Три интервала сцены: подход, замедление и остановка у переговорной" width="1672" height="941" loading="lazy" onerror="this.closest('.img-card').classList.add('img-missing')">
+    <figcaption class="img-missing-caption">Три интервала сцены: подход, замедление и остановка у переговорной</figcaption></figure><div class="fine-table-wrap"><table class="fine-table"><caption>Временная схема: 12 секунд, один непрерывный кадр</caption><thead><tr><th scope="col">Время</th><th scope="col">Действие и камера</th><th scope="col">Состояние в конце</th></tr></thead><tbody><tr><td>0–4 с</td><td>Средний общий план. Героиня идёт из глубины коридора. Камера начинает движение перед ней и плавно отъезжает назад.</td><td>Героиня приближается к двери переговорной</td></tr><tr><td>4–8 с</td><td>Камера сохраняет дистанцию и остаётся на уровне глаз. Окна находятся справа. Папка остаётся в левой руке.</td><td>Героиня подходит к двери и замедляется</td></tr><tr><td>8–12 с</td><td>Героиня останавливается, поворачивается к двери и кладёт правую руку на ручку. Камера мягко прекращает движение.</td><td>Чёткий финальный кадр у переговорной</td></tr></tbody></table></div><p data-source="108">Обратите внимание: каждый следующий интервал начинается из состояния, которым закончился предыдущий. Папка не исчезает, окна не меняют сторону, героиня не телепортируется к двери. Такое описание не гарантирует идеальную генерацию, но значительно уменьшает пространство для случайных решений.</p><div class="viz"><div class="viz-bar"><div class="dots" aria-hidden="true"><span class="dot dr"></span><span class="dot dy"></span><span class="dot dg"></span></div><span class="viz-lbl">Разберите сцену по шагам</span><button type="button" class="viz-fs" data-fs-src="scene_timeline.html" data-fs-title="Состояние в конце становится началом следующего шага">На весь экран</button></div><iframe src="scene_timeline.html" height="580" data-autofit loading="lazy" title="Состояние в конце становится началом следующего шага"></iframe></div><div class="card prose"><h3>Опишите камеру физически</h3><p data-source="110">Слова «кинематографично» и «динамичная камера» не объясняют траекторию. Для управляемого движения указываем начальную позицию камеры, направление взгляда, сторону относительно действия, траекторию и конечную точку.</p><p data-source="112">Если камера статична, это тоже нужно сказать прямо. Если происходит склейка, называем новый план. Если важна сторона объекта, фиксируем её в каждом фрагменте, где существует риск пространственной ошибки.</p></div><div class="prompt-box"><div class="prompt-head"><span>Описание камеры из лекции</span><button type="button" class="copy-btn" data-copy="camera-prompt">Копировать</button></div><pre id="camera-prompt">Камера находится перед героиней на уровне глаз, смотрит вдоль коридора и плавно движется назад с той же скоростью, сохраняя средний план.</pre></div><div class="card prose"><h3>Звук и физика</h3><p data-source="114">Звук описываем отдельно от визуального действия: шаги, лёгкий офисный фон, открывание двери, реплика, музыка. Так проще понять, какие элементы должны быть слышны и в какой момент.</p><p data-source="115">Физика включает не только сложные трюки. Нужно следить за тем, какой рукой герой держит предмет, куда он идёт, как открывается дверь, откуда падает свет и как объект переходит из одного состояния в другое. Чем важнее действие для сюжета, тем точнее мы описываем его начальное и конечное состояние.</p></div><div class="note-callout prose"><h3>Где помогает skill</h3><p>Skill — набор инструкций для помощника, как режиссёрская памятка. Он помогает организовать решения и превратить короткую идею в описание сцены.</p><p data-source="121">Skill помогает организовать режиссёрские решения. Он не отменяет необходимость проверить референсы, физику сцены и критерии приёмки.</p><p>Бриф, референсы и критерии приёмки остаются частью вашей работы.</p></div><p class="bridge">Утверждённая структура позволяет тратить генерации на проверку сцены, а не на поиск задачи.</p></section><section class="sec" id="s5"><div class="sec-head fade"><span class="num-badge n5">05</span><h2 class="sec-title">Каждая генерация проверяет гипотезу</h2><p class="sec-desc">Каждая попытка должна отвечать на конкретный вопрос. Без гипотезы новый вариант мало помогает понять причину ошибки.</p></div><div class="card prose"><h3>Проверяйте решения от простого к дорогому</h3><p data-source="125">Бюджет чаще всего теряется не из-за одной дорогой генерации, а из-за серии попыток без понятной цели. Автор нажимает Generate, получает почти подходящий вариант, полностью переписывает промпт и снова получает набор новых проблем.</p><p data-source="126">До основной генерации выгоднее последовательно проверить решения, которые можно проверить дешевле.</p><ol class="text-list"><li data-source="127">Утвердить задачу и критерии приёмки.</li><li data-source="128">Утвердить внешность героя, продукт, одежду и локацию на статичных изображениях.</li><li data-source="129">Собрать раскадровку или таблицу планов.</li><li data-source="130">Проверить сложное движение коротким тестом или более экономичным режимом, если выбранный сервис это позволяет.</li><li data-source="131">Сделать основную генерацию с уже утверждёнными входными материалами.</li><li data-source="132">Исправлять локальную проблему локальным способом: редактированием или постобработкой.</li><li data-source="133">Повышать разрешение и выполнять финальный экспорт после утверждения содержания.</li></ol></div><div class="card prose"><h3>Пять причин лишних расходов</h3><ul class="text-list"><li data-source="135">Генерация начинается до утверждения задачи.</li><li data-source="136">В один короткий ролик помещено слишком много событий.</li><li data-source="137">Самый дорогой режим включается для первой проверки идеи.</li><li data-source="138">В каждой попытке одновременно меняются промпт, референсы, камера и длительность.</li><li data-source="139">У проекта нет заранее согласованного критерия готовности.</li></ul></div><div class="card prose"><h3>Одна попытка — одна гипотеза</h3><p data-source="141">Представим результат: лицо героини получилось хорошо, походка естественная, камера движется правильно, но окна оказались слева. Если мы перепишем весь промпт и заменим все референсы, следующая версия может исправить окна и одновременно испортить лицо.</p><p data-source="142">Правильная гипотеза звучит так: «Если явно закрепить геометрию локации и повторить условие об окнах справа в соответствующих временных фрагментах, сохранится ли остальная сцена?» Мы меняем только этот уровень и сравниваем результат.</p><p data-source="143">Если тестируем два варианта, различие между ними тоже должно быть одним: только траектория камеры, только темп или только финальная поза. Иначе сравнение ничего не объясняет.</p></div><div class="card prose"><h3>Лимит до начала работы</h3><p data-source="145">До генерации определяем общий лимит и делим его на тесты, основную попытку и резерв. Конкретные цифры зависят от сервиса и проекта, поэтому универсальной пропорции нет. Важно, чтобы резерв не расходовался на бесконечный поиск «ещё чуть-чуть красивее».</p><p data-source="146">В работе с заказчиком отдельно оговариваем, сколько вариантов входит в стоимость и какие изменения считаются новым заданием. Если после утверждения офиса заказчик решает перенести действие на морское побережье, это не корректировка окна — это новая сцена с новым набором рисков.</p></div><div class="warn-callout prose"><p><strong>Нет универсальной пропорции бюджета.</strong> Заранее выделите тесты, основную попытку и резерв. Экономичный режим полезен только тогда, когда он есть в выбранном сервисе и позволяет проверить нужное свойство.</p></div><p class="bridge">Перед запуском пройдите <a href="#checklist">чек-лист из семи пунктов</a>. После генерации сначала определите причину дефекта.</p></section><section class="sec" id="s6"><div class="sec-head fade"><span class="num-badge n6">06</span><h2 class="sec-title">Сохраните героя, реквизит и пространство</h2><p class="sec-desc">Консистентность — непрерывность образа и пространства, как в соседних кадрах одного фильма. Отделите постоянное от переменного.</p></div><div class="card prose"><h3>Паспорт непрерывности — память сцены</h3><p data-source="157">Консистентность начинается с разделения параметров на неизменные и переменные. Если мы сами не провели эту границу, модель будет свободно интерпретировать всё сразу.</p><p data-source="158">К неизменным обычно относятся лицо, возраст, причёска, одежда, продукт, ключевой реквизит, геометрия локации, время суток и направление света. Переменными могут быть крупность, выражение лица, конкретная фаза движения и движение камеры.</p><p data-source="159">Для серии сцен удобно создать краткий паспорт непрерывности. В нём фиксируются обязательные признаки героя и среды. Этот документ используется во всех промптах, а изменения вносятся только осознанно.</p></div><div class="grid two"><div class="card prose"><h3>Меняется внешность</h3><p data-source="161">Проверяем четыре возможные причины. Первая — референс внешности недостаточно ясный. Вторая — несколько изображений показывают человека по-разному. Третья — референс лица одновременно используется как образец одежды, света и композиции. Четвёртая — в сцене слишком много сложных действий и ракурсов, поэтому приоритет внешности ослабевает.</p><p data-source="162">Исправление должно соответствовать причине. Иногда нужен более чистый набор ракурсов. Иногда достаточно снять с портрета лишние функции и отдельно задать одежду. Иногда сложную сцену нужно разделить на два исполнимых плана.</p></div><div class="card prose"><h3>Меняются одежда и реквизит</h3><p data-source="164">Одежда часто дрейфует, когда она описана общими словами или показана только частично. Важные признаки нужно назвать: цвет, силуэт, длину рукава, обувь, украшения. Если в руке находится папка или продукт, фиксируем руку, начальное положение и состояние в конце каждого временного фрагмента.</p><p data-source="165">Фраза «героиня держит папку» не объясняет, в какой руке она находится и что происходит с ней при открывании двери. Более точная последовательность позволяет избежать внезапного исчезновения предмета.</p></div><div class="card prose"><h3>Плывёт локация</h3><p data-source="167">Локация меняется, когда референс используется только как общий стиль, а география не закреплена. Для нашего офисного коридора существенны положение окон, направление движения, место двери и сторона, с которой камера наблюдает действие.</p><p data-source="168">Если камера пересекает ось действия или начинает следующий фрагмент с другой стороны без обозначенной склейки, модель может зеркально перестроить пространство. Поэтому финальное положение камеры одного фрагмента должно совпадать с начальным положением следующего.</p></div><div class="card prose"><h3>Сцена перегружена</h3><p data-source="170">Ещё одна частая ситуация — желание показать весь сюжет за несколько секунд. Например, герой входит в офис, приветствует коллег, садится, открывает ноутбук, показывает презентацию и получает одобрение команды. Для короткого фрагмента это шесть самостоятельных действий.</p><p data-source="171">Есть два решения. Первое — выбрать одно центральное событие, например уверенный вход и встречу команды. Второе — превратить историю в монтажную последовательность и выделить каждому действию отдельный план. Попытка сохранить всё в одном непрерывном кадре обычно увеличивает количество случайных ошибок.</p></div></div><div class="warn-callout prose"><p><strong>Точность инструкции снижает неоднозначность, но не отменяет просмотр.</strong> После правки проверьте и целевой дефект, и те элементы, которые уже получались удачно.</p></div><p class="bridge">Когда причина понятна, остаётся выбрать: регенерация, монтаж или приёмка.</p></section><section class="sec" id="s7"><div class="sec-head fade"><span class="num-badge n7">07</span><h2 class="sec-title">Решите, когда остановиться</h2><p class="sec-desc">Готовность определяют критерии проекта. Оцените дефект в обычном темпе просмотра и выберите способ исправления.</p></div><p data-source="175">Фраза done is better than perfect не разрешает отдавать слабую работу. Она становится полезной только после того, как мы определили критические критерии проекта.</p><figure class="img-card fade" data-lightbox tabindex="0" role="button" aria-label="Увеличить: Три решения по дефектам: серьёзная правка, постобработка или приёмка">
+    <img src="../png/seedance_2_5/05_acceptance.png" alt="Три решения по дефектам: серьёзная правка, постобработка или приёмка" width="1672" height="941" loading="lazy" onerror="this.closest('.img-card').classList.add('img-missing')">
+    <figcaption class="img-missing-caption">Три решения по дефектам: серьёзная правка, постобработка или приёмка</figcaption></figure><div class="grid"><div class="danger-callout prose"><h3>Красная зона · серьёзная правка</h3><p data-source="177">Регенерация или серьёзная правка нужны, если герой или продукт потеряли узнаваемость, нарушился смысл, невозможно понять действие, в центре кадра появился грубый артефакт, сломалась география или ролик не выполняет задачу заказчика.</p></div><div class="warn-callout prose"><h3>Жёлтая зона · постобработка</h3><p data-source="179">Постобработка выгоднее новой генерации, если проблема касается цвета, кадрирования, скорости, небольшой паузы, звука, короткого дефекта на краю кадра или фрагмента, который можно аккуратно закрыть монтажом.</p></div><div class="ok-callout prose"><h3>Зелёная зона · можно принимать</h3><p data-source="181">Работу можно принимать, если неточность заметна только при покадровом просмотре, не влияет на смысл, не меняет героя или продукт и практически не считывается зрителем на обычной скорости.</p></div></div><div class="card prose"><h3>Четыре вопроса перед новой генерацией</h3><ol class="text-list"><li data-source="184">Дефект влияет на задачу, смысл, героя, продукт или бренд?</li><li data-source="185">Он заметен при обычном просмотре, а не только покадрово?</li><li data-source="186">Его можно исправить быстрее и дешевле в монтаже?</li><li data-source="187">Новая генерация улучшит критичный элемент или просто даст ещё один вариант?</li></ol></div><p data-source="182">Зритель смотрит ролик в реальном темпе. Автор после десятой итерации начинает видеть детали, которых зритель не заметит никогда.</p><p data-source="188">Если критические критерии выполнены, дефект почти не заметен, а новая попытка может разрушить уже удачные элементы, работу пора завершать. Если ошибка влияет на доверие к продукту или узнаваемость героя, принцип done is better than perfect применять нельзя.</p></section><section class="sec" id="checklist"><div class="sec-head"><p class="eyebrow">Проверка перед запуском</p><h2 class="sec-title">Перед дорогой генерацией</h2><p class="sec-desc">Отметки сохраняются в этом браузере. Вернитесь к списку перед следующей попыткой.</p></div><div class="card"><p id="checklist-count" aria-live="polite">Отмечено: 0 / 7</p><div class="checklist-progress-bar" role="progressbar" aria-label="Готовность к генерации" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0" id="checklist-meter"><div class="checklist-progress-fill" id="checklist-progress"></div></div><ul class="checklist-items"><li><label><input type="checkbox" data-checklist-item="c1"><span data-source="148">Задача сформулирована одним предложением.</span></label></li><li><label><input type="checkbox" data-checklist-item="c2"><span data-source="149">Есть одно понятное видимое событие.</span></label></li><li><label><input type="checkbox" data-checklist-item="c3"><span data-source="150">Референсы не конфликтуют и имеют назначенные роли.</span></label></li><li><label><input type="checkbox" data-checklist-item="c4"><span data-source="151">Таймкоды покрывают всю длительность без разрывов.</span></label></li><li><label><input type="checkbox" data-checklist-item="c5"><span data-source="152">Камера описана физически.</span></label></li><li><label><input type="checkbox" data-checklist-item="c6"><span data-source="153">Важный реквизит переходит между временными фрагментами.</span></label></li><li><label><input type="checkbox" data-checklist-item="c7"><span data-source="154">Финальный кадр понятен.</span></label></li></ul><p class="checklist-done" id="checklist-done" hidden>Все пункты отмечены — можно переходить к проверке сцены.</p><button type="button" class="secondary" id="checklist-reset">Сбросить отметки</button></div></section><section class="sec" id="quiz"><div class="sec-head"><p class="eyebrow">Самопроверка</p><h2 class="sec-title">Проверьте себя</h2><p class="sec-desc">Шесть вопросов. После ответа появятся ключ и объяснение.</p></div><div class="quiz"><div class="quiz-question" data-quiz="1" data-explanation="Указаны конкретный дефект, момент его появления и влияние на узнаваемость. Это уже задача для правки."><p class="quiz-text" id="q-label-1">1. Какой комментарий помогает исправить ролик?</p><div class="quiz-options" role="radiogroup" aria-labelledby="q-label-1"><label><input type="radio" name="q1" value="wrong"><span>«Мне не очень нравится»</span></label><label><input type="radio" name="q1" value="right"><span>«На шестой секунде меняется лицо, и героиня перестаёт узнаваться»</span></label><label><input type="radio" name="q1" value="wrong"><span>«Добавьте красоты»</span></label></div><button type="button" class="quiz-check" data-quiz-check="1">Проверить</button><p class="quiz-feedback" data-quiz-feedback="1" aria-live="polite" hidden></p></div><div class="quiz-question" data-quiz="2" data-explanation="У слова «динамично» несколько производственных значений. Сначала выясните, какое из них важно заказчику."><p class="quiz-text" id="q-label-2">2. Заказчик просит «динамичнее». Ваш первый шаг?</p><div class="quiz-options" role="radiogroup" aria-labelledby="q-label-2"><label><input type="radio" name="q2" value="wrong"><span>Ускорить весь ролик</span></label><label><input type="radio" name="q2" value="wrong"><span>Добавить склейки</span></label><label><input type="radio" name="q2" value="right"><span>Уточнить: действие, камера, монтаж или музыка?</span></label></div><button type="button" class="quiz-check" data-quiz-check="2">Проверить</button><p class="quiz-feedback" data-quiz-feedback="2" aria-live="polite" hidden></p></div><div class="quiz-question" data-quiz="3" data-explanation="У каждого материала должно быть понятное поручение; конфликт разрешается согласованной иерархией."><p class="quiz-text" id="q-label-3">3. Референсы противоречат друг другу. Что делать?</p><div class="quiz-options" role="radiogroup" aria-labelledby="q-label-3"><label><input type="radio" name="q3" value="right"><span>Назначить роли, исключения и приоритеты</span></label><label><input type="radio" name="q3" value="wrong"><span>Добавить ещё изображений</span></label><label><input type="radio" name="q3" value="wrong"><span>Написать «сохранить всё»</span></label></div><button type="button" class="quiz-check" data-quiz-check="3">Проверить</button><p class="quiz-feedback" data-quiz-feedback="3" aria-live="polite" hidden></p></div><div class="quiz-question" data-quiz="4" data-explanation="Следующий интервал начинается там, где закончился предыдущий. Папка не исчезает, а камера не перемещается без объяснения."><p class="quiz-text" id="q-label-4">4. Что проверять на границе временных фрагментов?</p><div class="quiz-options" role="radiogroup" aria-labelledby="q-label-4"><label><input type="radio" name="q4" value="wrong"><span>Только совпадение цвета</span></label><label><input type="radio" name="q4" value="wrong"><span>Только длительность</span></label><label><input type="radio" name="q4" value="right"><span>Состояния героя, реквизита, камеры и пространства</span></label></div><button type="button" class="quiz-check" data-quiz-check="4">Проверить</button><p class="quiz-feedback" data-quiz-feedback="4" aria-live="polite" hidden></p></div><div class="quiz-question" data-quiz="5" data-explanation="Одна попытка проверяет одну гипотезу. Полная замена входных данных может разрушить удачные части сцены."><p class="quiz-text" id="q-label-5">5. Всё получилось, но окна оказались слева. Что изменить?</p><div class="quiz-options" role="radiogroup" aria-labelledby="q-label-5"><label><input type="radio" name="q5" value="wrong"><span>Все референсы и весь промпт</span></label><label><input type="radio" name="q5" value="right"><span>Условия геометрии, сохранив остальные параметры</span></label><label><input type="radio" name="q5" value="wrong"><span>Внешность героини</span></label></div><button type="button" class="quiz-check" data-quiz-check="5">Проверить</button><p class="quiz-feedback" data-quiz-feedback="5" aria-live="polite" hidden></p></div><div class="quiz-question" data-quiz="6" data-explanation="Готовность оценивают по задаче, смыслу, герою и продукту. Критический дефект нельзя оправдать принципом «сделанное лучше идеального»."><p class="quiz-text" id="q-label-6">6. Когда работу можно принимать?</p><div class="quiz-options" role="radiogroup" aria-labelledby="q-label-6"><label><input type="radio" name="q6" value="right"><span>Критерии выполнены, а мелкая неточность почти не видна в обычном темпе</span></label><label><input type="radio" name="q6" value="wrong"><span>Когда закончились попытки, даже если герой не узнаётся</span></label><label><input type="radio" name="q6" value="wrong"><span>Только когда каждый пиксель идеален</span></label></div><button type="button" class="quiz-check" data-quiz-check="6">Проверить</button><p class="quiz-feedback" data-quiz-feedback="6" aria-live="polite" hidden></p></div></div><p class="quiz-score-box" id="quiz-score" aria-live="polite">Отвечено: 0 / 6 · Верно: 0</p><button type="button" class="secondary" id="quiz-reset">Пройти заново</button></section><section class="sec" id="final"><div class="sec-head"><p class="eyebrow">Заберите в работу</p><h2 class="sec-title">Весь процесс — в пяти решениях</h2></div><ol class="conclusion-list">
+<li><strong>Начните с задачи.</strong> Согласуйте, что зритель должен увидеть и по каким признакам ролик будет принят.</li>
+<li><strong>Распределите управление.</strong> Назначьте референсам роли и отделите неизменное от свободной интерпретации.</li>
+<li><strong>Постройте непрерывность.</strong> Свяжите действие, камеру, реквизит и финальное состояние во времени.</li>
+<li><strong>Проверяйте одну гипотезу.</strong> Каждая попытка должна давать ответ, а бюджет — включать резерв.</li>
+<li><strong>Остановитесь по критериям.</strong> Исправляйте критичное; допустимые мелочи оценивайте в обычном темпе.</li></ol>
+<div class="hero-nav"><a href="#hero">↑ К началу</a><a href="#checklist">К чек-листу</a><a href="../index.html">Оглавление</a></div></section></main><div class="overlay" id="lightbox" aria-label="Увеличенная иллюстрация" aria-hidden="true" inert role="dialog" aria-modal="true">
+  <a class="overlay-download" id="lightbox-download" download aria-label="Скачать изображение">⬇ Скачать</a>
+  <button class="overlay-close" id="lightbox-close" aria-label="Закрыть">✕</button>
+  <img id="lightbox-img" alt="">
+</div>
+
+<div id="fs-overlay" aria-label="Разбор сцены на весь экран" aria-hidden="true" inert role="dialog" aria-modal="true">
+  <div id="fs-bar">
+    <span id="fs-title"></span>
+    <button type="button" id="fs-close" aria-label="Закрыть полноэкранный режим">✕</button>
+  </div>
+  <iframe id="fs-frame" title="Полноэкранная визуализация"></iframe>
+</div>
+
+<footer><a href="https://t.me/Elena_neyroseti" target="_blank" rel="noopener" class="svc-link">© Чепик Елена</a> · AI-видео · Лекция и материалы для самостоятельной работы</footer><script>
+/* Префикс имени файла при скачивании инфографики */
+const BRAND = "seedance-lecture";
+
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if (!reduceMotion && "IntersectionObserver" in window) {
+  const reveal = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        reveal.unobserve(entry.target);
+      }
+    });
+  }, {threshold: 0.06, rootMargin: "0px 0px -24px"});
+  document.querySelectorAll(".fade").forEach((element) => reveal.observe(element));
+} else {
+  document.querySelectorAll(".fade").forEach((element) => element.classList.add("in"));
+}
+
+/* Подсветка активной секции в навбаре */
+const navLinks = [...document.querySelectorAll(".nav-link")];
+const sections = [...document.querySelectorAll("main section[id]")];
+if ("IntersectionObserver" in window) {
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      navLinks.forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`);
+      });
+    });
+  }, {rootMargin: "-35% 0px -55%", threshold: 0});
+  sections.forEach((section) => sectionObserver.observe(section));
+}
+
+/* Лайтбокс */
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+const lightboxDownload = document.getElementById("lightbox-download");
+function brandedFilename(url) {
+  const name = url.split("/").pop().split("?")[0];
+  return `${BRAND}_${name}`;
+}
+document.querySelectorAll(".img-card[data-lightbox]").forEach((card) => {
+  card.addEventListener("click", () => {
+    if (card.classList.contains("img-missing")) return;
+    const img = card.querySelector("img");
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightboxDownload.href = img.src;
+    lightboxDownload.download = brandedFilename(img.src);
+    lightbox.classList.add("open");
+    lightbox.setAttribute("aria-hidden", "false");
+  });
+});
+function closeLightbox() {
+  if (lightbox.contains(document.activeElement)) {
+    document.activeElement.blur();
+  }
+  lightbox.classList.remove("open");
+  lightbox.setAttribute("aria-hidden", "true");
+  lightboxImg.removeAttribute("src");
+}
+document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
+lightbox.addEventListener("click", (event) => { if (event.target === lightbox) closeLightbox(); });
+
+/* Фуллскрин для iframe-карточек */
+const fsOverlay = document.getElementById("fs-overlay");
+const fsFrame = document.getElementById("fs-frame");
+const fsTitle = document.getElementById("fs-title");
+document.querySelectorAll(".viz-fs").forEach((button) => {
+  button.addEventListener("click", () => {
+    fsFrame.src = button.dataset.fsSrc;
+    fsTitle.textContent = button.dataset.fsTitle;
+    fsOverlay.classList.add("open");
+    fsOverlay.setAttribute("aria-hidden", "false");
+  });
+});
+function closeFs() {
+  if (fsOverlay.contains(document.activeElement)) {
+    document.activeElement.blur();
+  }
+  fsOverlay.classList.remove("open");
+  fsOverlay.setAttribute("aria-hidden", "true");
+  fsFrame.removeAttribute("src");
+}
+document.getElementById("fs-close").addEventListener("click", closeFs);
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (fsOverlay.classList.contains("open")) { closeFs(); } else { closeLightbox(); }
+});
+
+/* Копирование промптов */
+document.querySelectorAll("[data-copy]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const code = document.getElementById(button.dataset.copy);
+    if (!code) return;
+    const original = button.textContent;
+    try {
+      await navigator.clipboard.writeText(code.innerText);
+      button.textContent = "Скопировано";
+    } catch {
+      button.textContent = "Выделите текст";
+    }
+    window.setTimeout(() => { button.textContent = original; }, 1600);
+  });
+});
+
+/* Чек-лист готовности */
+const CHECKLIST_KEY = "seedance-2-5-lecture-checklist-v1";   // уникальный ключ на каждую страницу
+const checklistInputs = [...document.querySelectorAll("[data-checklist-item]")];
+const checklistProgress = document.getElementById("checklist-progress");
+const checklistDone = document.getElementById("checklist-done");
+function loadChecklistState() {
+  try { const v = JSON.parse(localStorage.getItem(CHECKLIST_KEY) || "{}"); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; } catch { return {}; }
+}
+function saveChecklistState(state) {
+  try { localStorage.setItem(CHECKLIST_KEY, JSON.stringify(state)); } catch { /* приватный режим */ }
+}
+function renderChecklistProgress() {
+  const checked = checklistInputs.filter((input) => input.checked).length;
+  checklistProgress.style.width = `${Math.round((checked / checklistInputs.length) * 100)}%`;
+  checklistDone.hidden = checked !== checklistInputs.length;
+}
+const savedChecklist = loadChecklistState();
+checklistInputs.forEach((input) => {
+  const key = input.dataset.checklistItem;
+  input.checked = Boolean(savedChecklist[key]);
+  input.addEventListener("change", () => {
+    const state = loadChecklistState();
+    state[key] = input.checked;
+    saveChecklistState(state);
+    renderChecklistProgress();
+  });
+});
+renderChecklistProgress();
+
+/* Квиз */
+const QUIZ_TOTAL = document.querySelectorAll(".quiz-question").length;
+let quizAnswered = 0;
+let quizCorrect = 0;
+const quizScoreEl = document.getElementById("quiz-score");
+document.querySelectorAll(".quiz-check").forEach((button) => {
+  button.addEventListener("click", () => {
+    const index = button.dataset.quizCheck;
+    const question = document.querySelector(`.quiz-question[data-quiz="${index}"]`);
+    const selected = question.querySelector(`input[name="q${index}"]:checked`);
+    const feedback = document.querySelector(`[data-quiz-feedback="${index}"]`);
+    if (!selected) {
+      feedback.textContent = "Выберите вариант ответа.";
+      feedback.className = "quiz-feedback incorrect";
+      feedback.hidden = false;
+      return;
+    }
+    const alreadyAnswered = button.disabled;
+    const isCorrect = selected.value === "right";
+    feedback.textContent = (isCorrect ? "Верно. " : "Посмотрите выделенный ключ. ") + question.dataset.explanation;
+    feedback.className = `quiz-feedback ${isCorrect ? "correct" : "incorrect"}`;
+    feedback.hidden = false;
+    question.querySelectorAll("input").forEach((input) => { input.disabled = true; });
+    question.querySelector('input[value="right"]').closest("label").classList.add("quiz-correct-answer");
+    button.disabled = true;
+    if (!alreadyAnswered) {
+      quizAnswered += 1;
+      if (isCorrect) quizCorrect += 1;
+      quizScoreEl.textContent = `Отвечено: ${quizAnswered} / ${QUIZ_TOTAL} · Верно: ${quizCorrect}`;
+    }
+  });
+});
+
+/* Доступность и возврат фокуса в оверлеях */
+let returnFocus = null;
+function activateOverlay(overlay, trigger, first){
+  returnFocus=trigger; overlay.inert=false; document.body.style.overflow='hidden'; first.focus();
+}
+function restoreFocus(overlay){
+  overlay.inert=true; document.body.style.overflow=''; if(returnFocus) returnFocus.focus();
+}
+const originalCloseLightbox=closeLightbox;
+closeLightbox=function(){
+  lightbox.classList.remove('zoom-mode'); lightboxImg.classList.remove('zoomed');
+  document.getElementById('lightbox-zoom').textContent='Масштаб 1:1';
+  originalCloseLightbox(); restoreFocus(lightbox);
+};
+const originalCloseFs=closeFs;
+closeFs=function(){originalCloseFs(); restoreFocus(fsOverlay)};
+// Обработчики кнопок заменены, чтобы закрытие всегда возвращало фокус.
+document.getElementById('lightbox-close').removeEventListener('click',originalCloseLightbox);
+document.getElementById('lightbox-close').addEventListener('click',closeLightbox);
+document.getElementById('fs-close').removeEventListener('click',originalCloseFs);
+document.getElementById('fs-close').addEventListener('click',closeFs);
+document.querySelectorAll('[data-lightbox]').forEach(card=>{
+  card.addEventListener('click',()=>{if(!card.classList.contains('img-missing')) activateOverlay(lightbox,card,document.getElementById('lightbox-close'))});
+  card.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();card.click()}});
+});
+document.querySelectorAll('.viz-fs').forEach(button=>button.addEventListener('click',()=>activateOverlay(fsOverlay,button,document.getElementById('fs-close'))));
+const zoomButton=document.createElement('button');
+zoomButton.id='lightbox-zoom'; zoomButton.type='button';zoomButton.textContent='Масштаб 1:1'; lightbox.appendChild(zoomButton);
+function toggleZoom(){const zoom=lightboxImg.classList.toggle('zoomed');lightbox.classList.toggle('zoom-mode',zoom);zoomButton.textContent=zoom?'Вписать':'Масштаб 1:1'}
+zoomButton.addEventListener('click',toggleZoom);lightboxImg.addEventListener('click',toggleZoom);
+document.addEventListener('keydown',event=>{
+  const active=fsOverlay.classList.contains('open')?fsOverlay:lightbox.classList.contains('open')?lightbox:null;
+  if(!active||event.key!=='Tab')return;
+  const items=[...active.querySelectorAll('button,a[href],iframe')].filter(el=>!el.disabled);
+  if(!items.length)return;
+  if(event.shiftKey&&document.activeElement===items[0]){event.preventDefault();items.at(-1).focus()}
+  else if(!event.shiftKey&&document.activeElement===items.at(-1)){event.preventDefault();items[0].focus()}
+});
+fsFrame.addEventListener('load',()=>{try{fsFrame.contentDocument.addEventListener('keydown',event=>{if(event.key==='Escape')closeFs();if(event.key==='Tab'){const buttons=[...fsFrame.contentDocument.querySelectorAll('button')];if((!event.shiftKey&&fsFrame.contentDocument.activeElement===buttons.at(-1))||(event.shiftKey&&fsFrame.contentDocument.activeElement===buttons[0])){event.preventDefault();document.getElementById('fs-close').focus()}}})}catch{}});
+
+/* Высоту определяет содержимое демо, включая мобильную раскладку. */
+const narrowQuery=window.matchMedia('(max-width: 760px)');
+document.querySelectorAll('.viz iframe').forEach(frame=>{
+  const baseHeight=Number(frame.getAttribute('height'))||580;
+  const autofit=frame.hasAttribute("data-autofit");let observer=null;
+  const fit=()=>{try{const body=frame.contentDocument&&frame.contentDocument.body;if(!body)return;const height=Math.ceil(body.getBoundingClientRect().height);frame.style.height=narrowQuery.matches||autofit?`${Math.max(baseHeight,height)}px`:''}catch{}};
+  const watch=()=>{fit();try{if(observer)observer.disconnect();const FrameObserver=frame.contentWindow.ResizeObserver||ResizeObserver;observer=new FrameObserver(fit);observer.observe(frame.contentDocument.body);const refit=()=>{fit();[400,1500,7000].forEach(ms=>setTimeout(fit,ms))};frame.contentDocument.addEventListener('click',refit,true);frame.contentDocument.addEventListener('input',refit,true)}catch{}};
+  frame.addEventListener('load',watch);try{if(frame.contentDocument?.readyState==='complete'&&frame.contentDocument.URL!=='about:blank')watch()}catch{}
+  const details=frame.closest('details');if(details)details.addEventListener('toggle',()=>{if(details.open){fit();setTimeout(fit,300)}});
+  narrowQuery.addEventListener('change',fit);
+});
+function updateChecklistLabel(){const n=checklistInputs.filter(i=>i.checked).length;document.getElementById('checklist-count').textContent=`Отмечено: ${n} / 7`;document.getElementById('checklist-meter').setAttribute('aria-valuenow',n)}
+checklistInputs.forEach(i=>i.addEventListener('change',updateChecklistLabel));updateChecklistLabel();
+document.getElementById('checklist-reset').addEventListener('click',()=>{checklistInputs.forEach(i=>i.checked=false);saveChecklistState({});renderChecklistProgress();updateChecklistLabel()});
+document.getElementById('quiz-reset').addEventListener('click',()=>{
+  document.querySelectorAll('.quiz-question').forEach(q=>{q.querySelectorAll('input').forEach(i=>{i.disabled=false;i.checked=false});q.querySelectorAll('label').forEach(l=>l.classList.remove('quiz-correct-answer'));q.querySelector('.quiz-check').disabled=false;q.querySelector('.quiz-feedback').hidden=true});quizAnswered=0;quizCorrect=0;quizScoreEl.textContent='Отвечено: 0 / 6 · Верно: 0';
+});
+</script></body></html>
